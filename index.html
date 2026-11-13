@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inspector de Conectores - Panel Trasero FP</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Fuentes Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f0fdf4 0%, #e0f2fe 50%, #fef3c7 100%);
+            min-height: 100vh;
+        }
+        h1, h2, .font-display {
+            font-family: 'Fredoka', sans-serif;
+        }
+        .btn-3d {
+            transition: all 0.12s ease;
+            box-shadow: 0 4px 0 rgba(0, 0, 0, 0.15);
+        }
+        .btn-3d:active {
+            transform: translateY(3px);
+            box-shadow: 0 1px 0 rgba(0, 0, 0, 0.15);
+        }
+        /* Estilos para Drag & Drop */
+        .draggable-tag {
+            cursor: grab;
+            touch-action: none;
+            user-select: none;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+        .draggable-tag:active {
+            cursor: grabbing;
+            transform: scale(1.05);
+        }
+        .drop-zone {
+            transition: all 0.2s ease;
+        }
+        .drop-zone.drag-over {
+            border-color: #10b981;
+            background-color: rgba(16, 185, 129, 0.15);
+            transform: scale(1.02);
+        }
+        #confetti-canvas {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 50;
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-between p-3 sm:p-6 text-slate-800">
+
+    <canvas id="confetti-canvas"></canvas>
+
+    <!-- Barra Superior -->
+    <header class="w-full max-w-6xl flex flex-wrap items-center justify-between gap-3 bg-white/90 backdrop-blur px-4 py-3 rounded-2xl shadow-sm border border-slate-200 mb-4">
+        <div class="flex items-center gap-2">
+            <span class="bg-emerald-600 text-white text-xs sm:text-sm font-bold px-3 py-1 rounded-full">SMR / FP BÁSICA</span>
+            <span class="text-slate-700 font-semibold text-sm sm:text-base">Identificación del Panel I/O (15 Conectores)</span>
+        </div>
+
+        <div class="flex items-center gap-2">
+            <button id="btn-home" class="hidden bg-slate-200 hover:bg-slate-300 text-slate-800 text-xs sm:text-sm font-bold px-3 py-1.5 rounded-xl transition cursor-pointer">
+                🏠 Cambiar Modo
+            </button>
+            <label class="flex items-center gap-2 cursor-pointer bg-slate-100 hover:bg-slate-200 transition px-3 py-1.5 rounded-xl border border-slate-200">
+                <input type="checkbox" id="teacher-mode-toggle" class="w-4 h-4 accent-emerald-600 rounded cursor-pointer">
+                <span class="text-xs sm:text-sm font-bold text-slate-700">🎓 Modo Profesor</span>
+            </label>
+        </div>
+    </header>
+
+    <!-- Contenedor Principal -->
+    <main class="w-full max-w-6xl bg-white rounded-3xl shadow-xl border-4 border-emerald-100 p-5 sm:p-8 flex flex-col items-center relative my-auto">
+
+        <!-- ========================================================= -->
+        <!-- PANTALLA 1: SELECCIÓN DE MODO DE JUEGO                    -->
+        <!-- ========================================================= -->
+        <section id="screen-start" class="w-full flex flex-col items-center text-center py-4">
+            <div class="w-20 h-20 bg-emerald-100 rounded-3xl flex items-center justify-center text-emerald-600 text-4xl mb-4 shadow-inner">
+                🔌
+            </div>
+            <h1 class="text-3xl sm:text-5xl font-bold text-slate-900 tracking-tight mb-3">
+                Inspector de <span class="text-emerald-600">Conectores de PC</span>
+            </h1>
+            <p class="text-base sm:text-lg text-slate-600 max-w-xl mb-8">
+                Catálogo completo de los <strong>15 conectores</strong> del panel trasero. Elige un modo de juego:
+            </p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5 w-full max-w-3xl">
+                <!-- Opción 1: Modo Quiz -->
+                <div class="bg-slate-50 border-2 border-slate-200 hover:border-emerald-400 rounded-3xl p-6 flex flex-col items-center justify-between transition">
+                    <div>
+                        <span class="text-4xl block mb-2">🎯</span>
+                        <h2 class="text-2xl font-bold text-slate-800 mb-2">Modo Test (Uno a uno)</h2>
+                        <p class="text-sm text-slate-600 mb-6">
+                            Observa cada conector ampliado y elige su nombre técnico entre 4 opciones posibles.
+                        </p>
+                    </div>
+                    <button id="btn-start-quiz" class="w-full btn-3d bg-emerald-600 hover:bg-emerald-500 text-white font-display text-xl font-bold py-3.5 px-6 rounded-2xl cursor-pointer">
+                        🚀 Jugar Modo Test
+                    </button>
+                </div>
+
+                <!-- Opción 2: Modo Arrastrar y Soltar -->
+                <div class="bg-slate-50 border-2 border-slate-200 hover:border-blue-400 rounded-3xl p-6 flex flex-col items-center justify-between transition">
+                    <div>
+                        <span class="text-4xl block mb-2">🧩</span>
+                        <h2 class="text-2xl font-bold text-slate-800 mb-2">Modo Tablero (Arrastrar)</h2>
+                        <p class="text-sm text-slate-600 mb-6">
+                            Visualiza los <strong>15 conectores a la vez</strong> en pantalla y arrastra cada tarjeta con su nombre encima de la foto correcta.
+                        </p>
+                    </div>
+                    <button id="btn-start-drag" class="w-full btn-3d bg-blue-600 hover:bg-blue-500 text-white font-display text-xl font-bold py-3.5 px-6 rounded-2xl cursor-pointer">
+                        🖐️ Jugar Modo Arrastrar
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================================= -->
+        <!-- PANTALLA 2A: MODO QUIZ (UNO A UNO)                        -->
+        <!-- ========================================================= -->
+        <section id="screen-quiz" class="w-full hidden flex-col items-center">
+            <div class="w-full max-w-2xl flex items-center justify-between mb-2">
+                <span id="question-progress" class="text-xs sm:text-sm font-bold text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full">
+                    Pregunta 1 de 15
+                </span>
+                <span id="score-text" class="text-xs sm:text-sm font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-full">
+                    Puntuación: 0 pts
+                </span>
+            </div>
+            <div class="w-full max-w-2xl bg-slate-100 h-3 rounded-full overflow-hidden mb-5">
+                <div id="progress-bar" class="bg-emerald-600 h-full transition-all duration-300" style="width: 6.6%;"></div>
+            </div>
+
+            <div class="w-full max-w-2xl bg-slate-900 border-2 border-slate-700 rounded-3xl p-4 flex flex-col items-center shadow-inner mb-5 relative overflow-hidden">
+                <div id="teacher-hint-badge" class="hidden absolute top-3 right-3 bg-amber-400 text-amber-950 text-xs font-extrabold px-3 py-1 rounded-lg z-10 shadow">
+                    💡 Pista Profesor
+                </div>
+                <img id="connector-img" src="" alt="Imagen del conector" class="w-full h-44 sm:h-52 object-contain rounded-2xl bg-slate-950 border border-slate-800 p-2">
+                <h2 id="connector-prompt-desc" class="text-white text-base sm:text-lg font-bold mt-3 text-center">
+                    ¿A qué conector corresponde esta imagen?
+                </h2>
+            </div>
+
+            <div id="options-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 w-full max-w-2xl mb-2"></div>
+        </section>
+
+        <!-- ========================================================= -->
+        <!-- PANTALLA 2B: MODO TABLERO ARRASTRAR Y SOLTAR              -->
+        <!-- ========================================================= -->
+        <section id="screen-drag" class="w-full hidden flex-col items-center">
+            <div class="w-full flex flex-wrap items-center justify-between gap-2 mb-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-900">🧩 Empareja los 15 conectores con su tarjeta</h2>
+                    <p class="text-xs sm:text-sm text-slate-500">Arrastra las tarjetas azules de abajo (o tócalas en pantalla táctil) y suéltalas sobre su conector.</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <span id="drag-score-badge" class="bg-emerald-100 text-emerald-800 font-bold text-sm px-3.5 py-1.5 rounded-xl">
+                        Emparejados: 0 / 15
+                    </span>
+                    <button id="btn-reset-drag" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-xs sm:text-sm px-3 py-1.5 rounded-xl cursor-pointer">
+                        🔄 Mezclar de nuevo
+                    </button>
+                </div>
+            </div>
+
+            <!-- Cuadrícula de los 15 conectores -->
+            <div id="drag-board-grid" class="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-2.5 w-full mb-5">
+                <!-- Se genera dinámicamente con JS -->
+            </div>
+
+            <!-- Bandeja de Tarjetas Arrastrables -->
+            <div class="w-full bg-slate-100 border-2 border-dashed border-slate-300 rounded-2xl p-4">
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-500 block mb-2.5 text-center">
+                    🏷️ Tarjetas disponibles (Arrastra hacia arriba):
+                </span>
+                <div id="draggable-cards-pool" class="flex flex-wrap items-center justify-center gap-2 min-h-[56px]">
+                    <!-- Tarjetas generadas dinámicamente -->
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================================= -->
+        <!-- PANTALLA 3: RESULTADOS FINALES                            -->
+        <!-- ========================================================= -->
+        <section id="screen-result" class="w-full hidden flex-col items-center text-center py-6">
+            <span class="text-6xl mb-3">🏆</span>
+            <h2 class="text-3xl sm:text-4xl font-bold text-slate-900 mb-2">¡Misión Completada!</h2>
+            <p id="final-score-text" class="text-xl font-semibold text-emerald-600 mb-6">Has identificado todos los conectores</p>
+
+            <div class="flex flex-wrap justify-center gap-3">
+                <button id="btn-restart" class="btn-3d bg-emerald-600 hover:bg-emerald-500 text-white font-display text-xl font-bold px-8 py-3.5 rounded-2xl cursor-pointer">
+                    🔄 Repetir este modo
+                </button>
+                <button id="btn-change-mode-end" class="btn-3d bg-slate-700 hover:bg-slate-600 text-white font-display text-xl font-bold px-8 py-3.5 rounded-2xl cursor-pointer">
+                    🏠 Elegir otro modo
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="w-full max-w-6xl text-center text-xs text-slate-500 mt-4">
+        Recurso interactivo para FP · Módulo de Montaje y Mantenimiento de Equipos
+    </footer>
+
+    <script>
+        // BANCO EXACTO DE LOS 15 CONECTORES CON SUS NOMBRES DE ARCHIVO DEFINITIVOS
+        const ALL_CONNECTORS = [
+            {
+                id: "ps2_morado",
+                shortLabel: "PS/2 Teclado",
+                title: "PS/2 Teclado (Morado)",
+                desc: "¿A qué puerto Mini-DIN de 6 pines de color morado corresponde esta imagen?",
+                correct: "Puerto PS/2 para el teclado",
+                image: "PS2_morado.png",
+                teacherHint: "Morado = Keyboard (Teclado)[cite: 11]."
+            },
+            {
+                id: "ps2_verde",
+                shortLabel: "PS/2 Ratón",
+                title: "PS/2 Ratón (Verde)",
+                desc: "¿A qué puerto Mini-DIN de 6 pines de color verde corresponde esta imagen?",
+                correct: "Puerto PS/2 para el ratón (mouse)",
+                image: "PS2_verde.png",
+                teacherHint: "Verde = Mouse (Ratón)[cite: 12]."
+            },
+            {
+                id: "audio_jack",
+                shortLabel: "Jack de Audio",
+                title: "Conectores Jack de Audio",
+                desc: "Observa los puertos de minijack analógico de 3.5 mm y sus colores:",
+                correct: "Conectores Jack de audio analógico (línea, salida y micrófono)",
+                image: "audio.png",
+                teacherHint: "Azul (Line-In), Verde (Altavoces), Rosa (Micrófono)[cite: 6]."
+            },
+            {
+                id: "rj45",
+                shortLabel: "Ethernet RJ-45",
+                title: "Puerto Ethernet (RJ-45)",
+                desc: "¿Cómo se denomina este puerto de red con pestañas de fijación para cable UTP?",
+                correct: "Puerto LAN / Ethernet (RJ-45)",
+                image: "RJ_45.png",
+                teacherHint: "Conector estándar de red cableada[cite: 13]."
+            },
+            {
+                id: "firewire",
+                shortLabel: "IEEE 1394 (FireWire)",
+                title: "Puerto IEEE 1394 (FireWire)",
+                desc: "Identifica este puerto de alta velocidad para transferencia de vídeo y datos:",
+                correct: "Puerto IEEE 1394 (FireWire)",
+                image: "IEEE_1394.png",
+                teacherHint: "Bus serie de alta velocidad usado en cámaras y audio profesional[cite: 20]."
+            },
+            {
+                id: "rca",
+                shortLabel: "Audio Coaxial RCA",
+                title: "Salida de Audio Digital / RCA",
+                desc: "Observa este conector coaxial para transmisión digital:",
+                correct: "Salida de audio digital coaxial (RCA)",
+                image: "RCA.png",
+                teacherHint: "Conector RCA utilizado para audio digital[cite: 24]."
+            },
+            {
+                id: "spdif_optico",
+                shortLabel: "S/PDIF Óptico",
+                title: "S/PDIF Óptico",
+                desc: "¿Cómo se denomina este puerto cuadrado que transmite audio digital mediante fibra óptica?",
+                correct: "Salida de audio digital óptica (S/PDIF / Toslink)",
+                image: "SPDIF_optico.png",
+                teacherHint: "Transmite sonido mediante pulsos de luz por fibra óptica[cite: 15]."
+            },
+            {
+                id: "usb_2_0",
+                shortLabel: "USB 2.0",
+                title: "Puerto USB 2.0",
+                desc: "Identifica este puerto estándar USB de alta velocidad clásica:",
+                correct: "Puerto USB 2.0 Type-A",
+                image: "USB_2_0.png",
+                teacherHint: "Estándar clásico USB de alta velocidad."
+            },
+            {
+                id: "usb_3_0",
+                shortLabel: "USB 3.0",
+                title: "Puerto USB 3.0",
+                desc: "Identifica este puerto USB de alta velocidad SuperSpeed:",
+                correct: "Puerto USB 3.0 / 3.1 Gen 1 Type-A",
+                image: "USB_3_0.png",
+                teacherHint: "Versión USB de alta velocidad con distinción SuperSpeed."
+            },
+            {
+                id: "vga",
+                shortLabel: "Vídeo VGA",
+                title: "Puerto de Vídeo VGA",
+                desc: "¿Cómo se denomina este conector trapezoidal de 15 pines para vídeo analógico?",
+                correct: "Puerto de vídeo analógico VGA (D-Sub 15)",
+                image: "VGA.png",
+                teacherHint: "Conector clásico de 15 pines para vídeo analógico."
+            },
+            {
+                id: "displayport",
+                shortLabel: "DisplayPort (DP)",
+                title: "Puerto de Vídeo DisplayPort",
+                desc: "Identifica este conector digital de vídeo con un borde biselado característico:",
+                correct: "Puerto DisplayPort (DP)",
+                image: "DisplayPort.png",
+                teacherHint: "Estándar de vídeo digital moderno[cite: 8]."
+            },
+            {
+                id: "dvi",
+                shortLabel: "Vídeo DVI",
+                title: "Puerto de Vídeo DVI",
+                desc: "Observa este conector digital/analógico con múltiples pines organizados en rejilla:",
+                correct: "Puerto DVI (Digital Visual Interface)",
+                image: "DVI.png",
+                teacherHint: "Conector con matriz de pines para pantallas planas[cite: 18]."
+            },
+            {
+                id: "hdmi",
+                shortLabel: "Vídeo HDMI",
+                title: "Puerto de Vídeo HDMI",
+                desc: "Identifica este conector plano y alargado estándar para vídeo y audio digital:",
+                correct: "Puerto HDMI (High-Definition Multimedia Interface)",
+                image: "HDMI.png",
+                teacherHint: "El estándar multimedia más común hoy en día[cite: 19]."
+            },
+            {
+                id: "paralelo",
+                shortLabel: "Paralelo LPT",
+                title: "Puerto Paralelo (LPT)",
+                desc: "Identifica este conector grande y alargado para dispositivos tradicionales:",
+                correct: "Puerto Paralelo LPT para impresoras",
+                image: "Puerto_paralelo.png",
+                teacherHint: "Conector tradicional para impresoras y periféricos en paralelo[cite: 23]."
+            },
+            {
+                id: "serial_com",
+                shortLabel: "Puerto Serie COM",
+                title: "Puerto Serie COM (RS-232)",
+                desc: "Identifica este conector DB9 macho clásico utilizado para consolas y dispositivos serie:",
+                correct: "Puerto Serie COM / RS-232 (DB9)",
+                image: "Serial_port.png",
+                teacherHint: "Conector DB9 macho de comunicación serie tradicional[cite: 7, 14]."
+            }
+        ];
+
+        // Estado global
+        let currentMode = 'START';
+        let isTeacherMode = false;
+
+        const screenStart = document.getElementById('screen-start');
+        const screenQuiz = document.getElementById('screen-quiz');
+        const screenDrag = document.getElementById('screen-drag');
+        const screenResult = document.getElementById('screen-result');
+        const btnHome = document.getElementById('btn-home');
+        const teacherToggle = document.getElementById('teacher-mode-toggle');
+
+        function setScreen(name) {
+            currentMode = name;
+            screenStart.classList.add('hidden');
+            screenQuiz.classList.add('hidden');
+            screenDrag.classList.add('hidden');
+            screenResult.classList.add('hidden');
+            btnHome.classList.toggle('hidden', name === 'START');
+
+            if (name === 'START') {
+                screenStart.classList.remove('hidden');
+            } else if (name === 'QUIZ') {
+                screenQuiz.classList.remove('hidden');
+                screenQuiz.classList.add('flex');
+            } else if (name === 'DRAG') {
+                screenDrag.classList.remove('hidden');
+                screenDrag.classList.add('flex');
+            } else if (name === 'RESULT') {
+                screenResult.classList.remove('hidden');
+                screenResult.classList.add('flex');
+            }
+        }
+
+        // =====================================================================
+        // LÓGICA MODO 1: QUIZ UNO A UNO
+        // =====================================================================
+        let quizList = [];
+        let quizIndex = 0;
+        let quizScore = 0;
+
+        function startQuizMode() {
+            quizIndex = 0;
+            quizScore = 0;
+            quizList = [...ALL_CONNECTORS].sort(() => Math.random() - 0.5);
+            setScreen('QUIZ');
+            loadQuizQuestion();
+        }
+
+        function loadQuizQuestion() {
+            const q = quizList[quizIndex];
+            document.getElementById('question-progress').textContent = `Pregunta ${quizIndex + 1} de ${quizList.length}`;
+            document.getElementById('score-text').textContent = `Puntuación: ${quizScore} pts`;
+            document.getElementById('progress-bar').style.width = `${((quizIndex + 1) / quizList.length) * 100}%`;
+
+            document.getElementById('connector-img').src = q.image;
+            document.getElementById('connector-prompt-desc').textContent = q.desc;
+
+            const hintBadge = document.getElementById('teacher-hint-badge');
+            if (isTeacherMode) {
+                hintBadge.textContent = `💡 ${q.teacherHint}`;
+                hintBadge.classList.remove('hidden');
+            } else {
+                hintBadge.classList.add('hidden');
+            }
+
+            const distractors = ALL_CONNECTORS.filter(item => item.id !== q.id)
+                                              .sort(() => Math.random() - 0.5)
+                                              .slice(0, 3)
+                                              .map(item => item.correct);
+            const options = [...distractors, q.correct].sort(() => Math.random() - 0.5);
+
+            const optionsGrid = document.getElementById('options-grid');
+            optionsGrid.innerHTML = '';
+            options.forEach(optText => {
+                const btn = document.createElement('button');
+                btn.className = "btn-3d bg-white hover:bg-emerald-50 border-2 border-slate-200 hover:border-emerald-300 text-slate-800 font-semibold text-sm sm:text-base p-3 rounded-2xl text-left transition cursor-pointer flex items-center justify-between";
+                btn.innerHTML = `<span>${optText}</span> <span class="text-slate-400">➡️</span>`;
+                btn.addEventListener('click', () => handleQuizAnswer(optText === q.correct, btn, q.correct));
+                optionsGrid.appendChild(btn);
+            });
+        }
+
+        function handleQuizAnswer(isCorrect, selectedBtn, correctText) {
+            const allBtns = document.getElementById('options-grid').querySelectorAll('button');
+            allBtns.forEach(b => b.style.pointerEvents = 'none');
+
+            if (isCorrect) {
+                quizScore += 10;
+                selectedBtn.classList.add('bg-emerald-500', 'border-emerald-600', 'text-white');
+                selectedBtn.querySelector('span:last-child').textContent = '✅';
+            } else {
+                selectedBtn.classList.add('bg-rose-500', 'border-rose-600', 'text-white');
+                selectedBtn.querySelector('span:last-child').textContent = '❌';
+                allBtns.forEach(b => {
+                    if (b.textContent.includes(correctText)) {
+                        b.classList.add('bg-emerald-100', 'border-emerald-400', 'text-emerald-950');
+                        b.querySelector('span:last-child').textContent = '✔️';
+                    }
+                });
+            }
+
+            setTimeout(() => {
+                quizIndex++;
+                if (quizIndex < quizList.length) {
+                    loadQuizQuestion();
+                } else {
+                    document.getElementById('final-score-text').textContent = `Modo Test: Has conseguido ${quizScore} de ${quizList.length * 10} puntos.`;
+                    setScreen('RESULT');
+                    if (quizScore >= quizList.length * 8) launchConfetti();
+                }
+            }, 1300);
+        }
+
+        // =====================================================================
+        // LÓGICA MODO 2: TABLERO ARRASTRAR Y SOLTAR (15 CONECTORES)
+        // =====================================================================
+        let matchedCount = 0;
+        let selectedTouchCardId = null;
+
+        function startDragMode() {
+            matchedCount = 0;
+            selectedTouchCardId = null;
+            setScreen('DRAG');
+            renderDragBoard();
+        }
+
+        function renderDragBoard() {
+            const boardGrid = document.getElementById('drag-board-grid');
+            const cardsPool = document.getElementById('draggable-cards-pool');
+            document.getElementById('drag-score-badge').textContent = `Emparejados: 0 / ${ALL_CONNECTORS.length}`;
+
+            boardGrid.innerHTML = '';
+            cardsPool.innerHTML = '';
+
+            const shuffledSlots = [...ALL_CONNECTORS].sort(() => Math.random() - 0.5);
+            const shuffledTags = [...ALL_CONNECTORS].sort(() => Math.random() - 0.5);
+
+            shuffledSlots.forEach(item => {
+                const slot = document.createElement('div');
+                slot.dataset.targetId = item.id;
+                slot.className = "drop-zone bg-slate-900 border-2 border-slate-700 rounded-2xl p-2 flex flex-col items-center justify-between min-h-[140px] relative";
+
+                const img = document.createElement('img');
+                img.alt = item.shortLabel;
+                img.className = "w-full h-16 sm:h-20 object-contain rounded-xl bg-slate-950 p-1 pointer-events-none";
+                img.src = item.image;
+
+                const dropArea = document.createElement('div');
+                dropArea.className = "slot-label mt-1 w-full py-1 px-1 rounded-xl border border-dashed border-slate-600 text-center text-[10px] sm:text-xs font-semibold text-slate-400";
+                dropArea.textContent = isTeacherMode ? `💡 ${item.shortLabel}` : "Suelta aquí...";
+
+                slot.appendChild(img);
+                slot.appendChild(dropArea);
+
+                slot.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    if (!slot.classList.contains('matched')) slot.classList.add('drag-over');
+                });
+                slot.addEventListener('dragleave', () => slot.classList.remove('drag-over'));
+                slot.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    slot.classList.remove('drag-over');
+                    const draggedId = e.dataTransfer.getData('text/plain');
+                    checkMatch(draggedId, item.id, slot);
+                });
+
+                slot.addEventListener('click', () => {
+                    if (selectedTouchCardId && !slot.classList.contains('matched')) {
+                        checkMatch(selectedTouchCardId, item.id, slot);
+                    }
+                });
+
+                boardGrid.appendChild(slot);
+            });
+
+            shuffledTags.forEach(item => {
+                const tag = document.createElement('div');
+                tag.id = `tag-${item.id}`;
+                tag.draggable = true;
+                tag.dataset.cardId = item.id;
+                tag.className = "draggable-tag btn-3d bg-blue-600 hover:bg-blue-500 text-white font-display font-bold text-[11px] sm:text-xs px-2.5 py-1.5 rounded-xl shadow";
+                tag.textContent = item.shortLabel;
+
+                tag.addEventListener('dragstart', (e) => {
+                    e.dataTransfer.setData('text/plain', item.id);
+                });
+
+                tag.addEventListener('click', () => {
+                    document.querySelectorAll('.draggable-tag').forEach(t => t.classList.remove('ring-4', 'ring-amber-400'));
+                    if (selectedTouchCardId === item.id) {
+                        selectedTouchCardId = null;
+                    } else {
+                        selectedTouchCardId = item.id;
+                        tag.classList.add('ring-4', 'ring-amber-400');
+                    }
+                });
+
+                cardsPool.appendChild(tag);
+            });
+        }
+
+        function checkMatch(draggedId, targetId, slotElement) {
+            if (!draggedId || slotElement.classList.contains('matched')) return;
+
+            const tagElement = document.getElementById(`tag-${draggedId}`);
+            if (!tagElement) return;
+
+            if (draggedId === targetId) {
+                slotElement.classList.remove('border-slate-700');
+                slotElement.classList.add('matched', 'border-emerald-500', 'bg-emerald-950/60');
+
+                const labelBox = slotElement.querySelector('.slot-label');
+                labelBox.className = "slot-label mt-1 w-full py-1 px-1 rounded-xl bg-emerald-500 text-slate-950 text-center text-[10px] sm:text-xs font-extrabold";
+                labelBox.textContent = `✅ ${tagElement.textContent}`;
+
+                tagElement.remove();
+                selectedTouchCardId = null;
+                matchedCount++;
+                document.getElementById('drag-score-badge').textContent = `Emparejados: ${matchedCount} / ${ALL_CONNECTORS.length}`;
+
+                if (matchedCount === ALL_CONNECTORS.length) {
+                    setTimeout(() => {
+                        document.getElementById('final-score-text').textContent = `¡Has emparejado correctamente los ${ALL_CONNECTORS.length} conectores en el tablero!`;
+                        setScreen('RESULT');
+                        launchConfetti();
+                    }, 700);
+                }
+            } else {
+                slotElement.classList.add('border-rose-500', 'bg-rose-950/50');
+                setTimeout(() => {
+                    slotElement.classList.remove('border-rose-500', 'bg-rose-950/50');
+                }, 500);
+            }
+        }
+
+        // =====================================================================
+        // EVENTOS Y CONFETI
+        // =====================================================================
+        let lastPlayedMode = 'QUIZ';
+
+        document.getElementById('btn-start-quiz').addEventListener('click', () => {
+            lastPlayedMode = 'QUIZ';
+            startQuizMode();
+        });
+
+        document.getElementById('btn-start-drag').addEventListener('click', () => {
+            lastPlayedMode = 'DRAG';
+            startDragMode();
+        });
+
+        document.getElementById('btn-reset-drag').addEventListener('click', startDragMode);
+
+        document.getElementById('btn-restart').addEventListener('click', () => {
+            if (lastPlayedMode === 'DRAG') startDragMode();
+            else startQuizMode();
+        });
+
+        btnHome.addEventListener('click', () => setScreen('START'));
+        document.getElementById('btn-change-mode-end').addEventListener('click', () => setScreen('START'));
+
+        teacherToggle.addEventListener('change', (e) => {
+            isTeacherMode = e.target.checked;
+            if (currentMode === 'QUIZ') loadQuizQuestion();
+            if (currentMode === 'DRAG') {
+                document.querySelectorAll('.drop-zone:not(.matched)').forEach(slot => {
+                    const item = ALL_CONNECTORS.find(c => c.id === slot.dataset.targetId);
+                    const labelBox = slot.querySelector('.slot-label');
+                    if (item && labelBox) {
+                        labelBox.textContent = isTeacherMode ? `💡 ${item.shortLabel}` : "Suelta aquí...";
+                    }
+                });
+            }
+        });
+
+        const canvas = document.getElementById('confetti-canvas');
+        const ctx = canvas.getContext('2d');
+        let pieces = [];
+        let animId = null;
+
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        function launchConfetti() {
+            pieces = [];
+            const colors = ['#059669', '#2563eb', '#f59e0b', '#ec4899', '#10b981'];
+            for (let i = 0; i < 90; i++) {
+                pieces.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height - canvas.height,
+                    w: Math.random() * 8 + 4,
+                    h: Math.random() * 6 + 3,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    speedY: Math.random() * 3 + 2,
+                    speedX: Math.random() * 2 - 1,
+                    rotation: Math.random() * 360,
+                    rotSpeed: Math.random() * 6 - 3
+                });
+            }
+            if (animId) cancelAnimationFrame(animId);
+            loopConfetti();
+        }
+
+        function loopConfetti() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            let active = 0;
+            pieces.forEach(p => {
+                p.y += p.speedY;
+                p.x += p.speedX;
+                p.rotation += p.rotSpeed;
+                if (p.y < canvas.height + 20) {
+                    active++;
+                    ctx.save();
+                    ctx.translate(p.x, p.y);
+                    ctx.rotate((p.rotation * Math.PI) / 180);
+                    ctx.fillStyle = p.color;
+                    ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
+                    ctx.restore();
+                }
+            });
+            if (active > 0) animId = requestAnimationFrame(loopConfetti);
+        }
+    </script>
+</body>
+</html>
