@@ -99,7 +99,7 @@
                         <span class="text-4xl block mb-2">🎯</span>
                         <h2 class="text-2xl font-bold text-slate-800 mb-2">Modo Test (Uno a uno)</h2>
                         <p class="text-sm text-slate-600 mb-6">
-                            Observa cada conector ampliado y elige su nombre técnico entre 4 opciones posibles.
+                            Observa cada conector y elige su nombre técnico entre 4 opciones posibles.
                         </p>
                     </div>
                     <button id="btn-start-quiz" class="w-full btn-3d bg-emerald-600 hover:bg-emerald-500 text-white font-display text-xl font-bold py-3.5 px-6 rounded-2xl cursor-pointer">
@@ -113,7 +113,7 @@
                         <span class="text-4xl block mb-2">🧩</span>
                         <h2 class="text-2xl font-bold text-slate-800 mb-2">Modo Tablero (Arrastrar)</h2>
                         <p class="text-sm text-slate-600 mb-6">
-                            Visualiza los <strong>15 conectores a la vez</strong> en pantalla y arrastra cada tarjeta con su nombre encima de la foto correcta.
+                            Visualiza los <strong>15 conectores a la vez</strong> y arrastra cada tarjeta con su nombre sobre la foto correcta.
                         </p>
                     </div>
                     <button id="btn-start-drag" class="w-full btn-3d bg-blue-600 hover:bg-blue-500 text-white font-display text-xl font-bold py-3.5 px-6 rounded-2xl cursor-pointer">
@@ -139,13 +139,14 @@
                 <div id="progress-bar" class="bg-emerald-600 h-full transition-all duration-300" style="width: 6.6%;"></div>
             </div>
 
-            <div class="w-full max-w-2xl bg-slate-900 border-2 border-slate-700 rounded-3xl p-4 flex flex-col items-center shadow-inner mb-5 relative overflow-hidden">
+            <!-- Contenedor con fondo claro -->
+            <div class="w-full max-w-2xl bg-white border-2 border-slate-200 rounded-3xl p-4 flex flex-col items-center shadow-md mb-5 relative overflow-hidden">
                 <div id="teacher-hint-badge" class="hidden absolute top-3 right-3 bg-amber-400 text-amber-950 text-xs font-extrabold px-3 py-1 rounded-lg z-10 shadow">
                     💡 Pista Profesor
                 </div>
-                <img id="connector-img" src="" alt="Imagen del conector" class="w-full h-44 sm:h-52 object-contain rounded-2xl bg-slate-950 border border-slate-800 p-2">
-                <h2 id="connector-prompt-desc" class="text-white text-base sm:text-lg font-bold mt-3 text-center">
-                    ¿A qué conector corresponde esta imagen?
+                <img id="connector-img" src="" alt="Imagen del conector" class="w-full h-48 sm:h-56 object-contain rounded-2xl bg-slate-50 border border-slate-200 p-2">
+                <h2 id="connector-prompt-desc" class="text-slate-800 text-lg sm:text-xl font-bold mt-3 text-center">
+                    ¿Qué conector es este?
                 </h2>
             </div>
 
@@ -171,7 +172,7 @@
                 </div>
             </div>
 
-            <!-- Cuadrícula de los 15 conectores -->
+            <!-- Cuadrícula de los 15 conectores con fondo claro -->
             <div id="drag-board-grid" class="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-2.5 w-full mb-5">
                 <!-- Se genera dinámicamente con JS -->
             </div>
@@ -212,139 +213,124 @@
     </footer>
 
     <script>
-        // BANCO EXACTO DE LOS 15 CONECTORES CON SUS NOMBRES DE ARCHIVO DEFINITIVOS
+        // BANCO EXACTO DE LOS 15 CONECTORES CON NOMBRES DE ARCHIVO DEFINITIVOS
         const ALL_CONNECTORS = [
             {
                 id: "ps2_morado",
                 shortLabel: "PS/2 Teclado",
                 title: "PS/2 Teclado (Morado)",
-                desc: "¿A qué puerto Mini-DIN de 6 pines de color morado corresponde esta imagen?",
                 correct: "Puerto PS/2 para el teclado",
                 image: "PS2_morado.png",
-                teacherHint: "Morado = Keyboard (Teclado)[cite: 11]."
+                teacherHint: "Es el puerto Mini-DIN de color morado para teclado[cite: 11]."
             },
             {
                 id: "ps2_verde",
                 shortLabel: "PS/2 Ratón",
                 title: "PS/2 Ratón (Verde)",
-                desc: "¿A qué puerto Mini-DIN de 6 pines de color verde corresponde esta imagen?",
                 correct: "Puerto PS/2 para el ratón (mouse)",
                 image: "PS2_verde.png",
-                teacherHint: "Verde = Mouse (Ratón)[cite: 12]."
+                teacherHint: "Es el puerto Mini-DIN de color verde para ratón[cite: 12]."
             },
             {
                 id: "audio_jack",
                 shortLabel: "Jack de Audio",
                 title: "Conectores Jack de Audio",
-                desc: "Observa los puertos de minijack analógico de 3.5 mm y sus colores:",
                 correct: "Conectores Jack de audio analógico (línea, salida y micrófono)",
                 image: "audio.png",
-                teacherHint: "Azul (Line-In), Verde (Altavoces), Rosa (Micrófono)[cite: 6]."
+                teacherHint: "Minijacks de 3.5 mm con código de colores estándar[cite: 6]."
             },
             {
                 id: "rj45",
                 shortLabel: "Ethernet RJ-45",
                 title: "Puerto Ethernet (RJ-45)",
-                desc: "¿Cómo se denomina este puerto de red con pestañas de fijación para cable UTP?",
                 correct: "Puerto LAN / Ethernet (RJ-45)",
                 image: "RJ_45.png",
-                teacherHint: "Conector estándar de red cableada[cite: 13]."
+                teacherHint: "Conector rectangular con pestañas para cable de red UTP[cite: 13]."
             },
             {
                 id: "firewire",
                 shortLabel: "IEEE 1394 (FireWire)",
                 title: "Puerto IEEE 1394 (FireWire)",
-                desc: "Identifica este puerto de alta velocidad para transferencia de vídeo y datos:",
                 correct: "Puerto IEEE 1394 (FireWire)",
                 image: "IEEE_1394.png",
-                teacherHint: "Bus serie de alta velocidad usado en cámaras y audio profesional[cite: 20]."
+                teacherHint: "Bus serie de alta velocidad (FireWire)[cite: 20]."
             },
             {
                 id: "rca",
                 shortLabel: "Audio Coaxial RCA",
                 title: "Salida de Audio Digital / RCA",
-                desc: "Observa este conector coaxial para transmisión digital:",
                 correct: "Salida de audio digital coaxial (RCA)",
                 image: "RCA.png",
-                teacherHint: "Conector RCA utilizado para audio digital[cite: 24]."
+                teacherHint: "Conector RCA individual para audio digital[cite: 24]."
             },
             {
                 id: "spdif_optico",
                 shortLabel: "S/PDIF Óptico",
                 title: "S/PDIF Óptico",
-                desc: "¿Cómo se denomina este puerto cuadrado que transmite audio digital mediante fibra óptica?",
                 correct: "Salida de audio digital óptica (S/PDIF / Toslink)",
                 image: "SPDIF_optico.png",
-                teacherHint: "Transmite sonido mediante pulsos de luz por fibra óptica[cite: 15]."
+                teacherHint: "Puerto cuadrado para transmisión de audio por fibra óptica[cite: 15]."
             },
             {
                 id: "usb_2_0",
                 shortLabel: "USB 2.0",
                 title: "Puerto USB 2.0",
-                desc: "Identifica este puerto estándar USB de alta velocidad clásica:",
                 correct: "Puerto USB 2.0 Type-A",
                 image: "USB_2_0.png",
-                teacherHint: "Estándar clásico USB de alta velocidad."
+                teacherHint: "Puerto USB clásico de alta velocidad."
             },
             {
                 id: "usb_3_0",
                 shortLabel: "USB 3.0",
                 title: "Puerto USB 3.0",
-                desc: "Identifica este puerto USB de alta velocidad SuperSpeed:",
                 correct: "Puerto USB 3.0 / 3.1 Gen 1 Type-A",
                 image: "USB_3_0.png",
-                teacherHint: "Versión USB de alta velocidad con distinción SuperSpeed."
+                teacherHint: "Puerto USB de alta velocidad SuperSpeed."
             },
             {
                 id: "vga",
                 shortLabel: "Vídeo VGA",
                 title: "Puerto de Vídeo VGA",
-                desc: "¿Cómo se denomina este conector trapezoidal de 15 pines para vídeo analógico?",
                 correct: "Puerto de vídeo analógico VGA (D-Sub 15)",
                 image: "VGA.png",
-                teacherHint: "Conector clásico de 15 pines para vídeo analógico."
+                teacherHint: "Conector trapezoidal azul de 15 pines para vídeo analógico."
             },
             {
                 id: "displayport",
                 shortLabel: "DisplayPort (DP)",
                 title: "Puerto de Vídeo DisplayPort",
-                desc: "Identifica este conector digital de vídeo con un borde biselado característico:",
                 correct: "Puerto DisplayPort (DP)",
                 image: "DisplayPort.png",
-                teacherHint: "Estándar de vídeo digital moderno[cite: 8]."
+                teacherHint: "Interfaz digital de vídeo con un borde biselado[cite: 8]."
             },
             {
                 id: "dvi",
                 shortLabel: "Vídeo DVI",
                 title: "Puerto de Vídeo DVI",
-                desc: "Observa este conector digital/analógico con múltiples pines organizados en rejilla:",
                 correct: "Puerto DVI (Digital Visual Interface)",
                 image: "DVI.png",
-                teacherHint: "Conector con matriz de pines para pantallas planas[cite: 18]."
+                teacherHint: "Conector digital con matriz de pines en rejilla[cite: 18]."
             },
             {
                 id: "hdmi",
                 shortLabel: "Vídeo HDMI",
                 title: "Puerto de Vídeo HDMI",
-                desc: "Identifica este conector plano y alargado estándar para vídeo y audio digital:",
                 correct: "Puerto HDMI (High-Definition Multimedia Interface)",
                 image: "HDMI.png",
-                teacherHint: "El estándar multimedia más común hoy en día[cite: 19]."
+                teacherHint: "Interfaz multimedia estándar de alta definición[cite: 19]."
             },
             {
                 id: "paralelo",
                 shortLabel: "Paralelo LPT",
                 title: "Puerto Paralelo (LPT)",
-                desc: "Identifica este conector grande y alargado para dispositivos tradicionales:",
                 correct: "Puerto Paralelo LPT para impresoras",
                 image: "Puerto_paralelo.png",
-                teacherHint: "Conector tradicional para impresoras y periféricos en paralelo[cite: 23]."
+                teacherHint: "Conector DB25 hembra tradicional para impresoras[cite: 23]."
             },
             {
                 id: "serial_com",
                 shortLabel: "Puerto Serie COM",
                 title: "Puerto Serie COM (RS-232)",
-                desc: "Identifica este conector DB9 macho clásico utilizado para consolas y dispositivos serie:",
                 correct: "Puerto Serie COM / RS-232 (DB9)",
                 image: "Serial_port.png",
                 teacherHint: "Conector DB9 macho de comunicación serie tradicional[cite: 7, 14]."
@@ -406,7 +392,6 @@
             document.getElementById('progress-bar').style.width = `${((quizIndex + 1) / quizList.length) * 100}%`;
 
             document.getElementById('connector-img').src = q.image;
-            document.getElementById('connector-prompt-desc').textContent = q.desc;
 
             const hintBadge = document.getElementById('teacher-hint-badge');
             if (isTeacherMode) {
@@ -491,15 +476,16 @@
             shuffledSlots.forEach(item => {
                 const slot = document.createElement('div');
                 slot.dataset.targetId = item.id;
-                slot.className = "drop-zone bg-slate-900 border-2 border-slate-700 rounded-2xl p-2 flex flex-col items-center justify-between min-h-[140px] relative";
+                // Fondo blanco / claro para las tarjetas del tablero
+                slot.className = "drop-zone bg-white border-2 border-slate-200 rounded-2xl p-2 flex flex-col items-center justify-between min-h-[140px] relative shadow-sm";
 
                 const img = document.createElement('img');
                 img.alt = item.shortLabel;
-                img.className = "w-full h-16 sm:h-20 object-contain rounded-xl bg-slate-950 p-1 pointer-events-none";
+                img.className = "w-full h-16 sm:h-20 object-contain rounded-xl bg-slate-50 p-1 pointer-events-none border border-slate-100";
                 img.src = item.image;
 
                 const dropArea = document.createElement('div');
-                dropArea.className = "slot-label mt-1 w-full py-1 px-1 rounded-xl border border-dashed border-slate-600 text-center text-[10px] sm:text-xs font-semibold text-slate-400";
+                dropArea.className = "slot-label mt-1 w-full py-1 px-1 rounded-xl border border-dashed border-slate-300 text-center text-[10px] sm:text-xs font-semibold text-slate-500 bg-slate-50";
                 dropArea.textContent = isTeacherMode ? `💡 ${item.shortLabel}` : "Suelta aquí...";
 
                 slot.appendChild(img);
@@ -559,11 +545,11 @@
             if (!tagElement) return;
 
             if (draggedId === targetId) {
-                slotElement.classList.remove('border-slate-700');
-                slotElement.classList.add('matched', 'border-emerald-500', 'bg-emerald-950/60');
+                slotElement.classList.remove('border-slate-200', 'bg-white');
+                slotElement.classList.add('matched', 'border-emerald-500', 'bg-emerald-50');
 
                 const labelBox = slotElement.querySelector('.slot-label');
-                labelBox.className = "slot-label mt-1 w-full py-1 px-1 rounded-xl bg-emerald-500 text-slate-950 text-center text-[10px] sm:text-xs font-extrabold";
+                labelBox.className = "slot-label mt-1 w-full py-1 px-1 rounded-xl bg-emerald-500 text-white text-center text-[10px] sm:text-xs font-extrabold";
                 labelBox.textContent = `✅ ${tagElement.textContent}`;
 
                 tagElement.remove();
@@ -579,9 +565,9 @@
                     }, 700);
                 }
             } else {
-                slotElement.classList.add('border-rose-500', 'bg-rose-950/50');
+                slotElement.classList.add('border-rose-500', 'bg-rose-50');
                 setTimeout(() => {
-                    slotElement.classList.remove('border-rose-500', 'bg-rose-950/50');
+                    slotElement.classList.remove('border-rose-500', 'bg-rose-50');
                 }, 500);
             }
         }
@@ -613,7 +599,6 @@
 
         teacherToggle.addEventListener('change', (e) => {
             isTeacherMode = e.target.checked;
-            if (currentMode === 'QUIZ') loadQuizQuestion();
             if (currentMode === 'DRAG') {
                 document.querySelectorAll('.drop-zone:not(.matched)').forEach(slot => {
                     const item = ALL_CONNECTORS.find(c => c.id === slot.dataset.targetId);
